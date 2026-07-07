@@ -19,11 +19,77 @@
             border: none;
             display: block;
         }
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            background-color: #f8fafc;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #475569;
+            transition: opacity 0.3s ease;
+        }
+        #loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border: 4px solid #cbd5e1;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: putar 0.8s linear infinite;
+        }
+        @keyframes putar { to { transform: rotate(360deg); } }
+        #fallback-link {
+            display: none;
+            margin-top: 6px;
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 0 20px;
+        }
+        #fallback-link a { color: #2563eb; font-weight: 600; }
+        #loading-screen.timeout .spinner { display: none; }
+        #loading-screen.timeout #fallback-link { display: block; }
+        #loading-screen.timeout #loading-text { display: none; }
     </style>
 </head>
 <body>
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <div id="loading-text">Memuat kalkulator...</div>
+        <div id="fallback-link">
+            Halaman tidak kunjung muncul? Kemungkinan koneksi lambat atau akses dibatasi.<br>
+            <a href="https://script.google.com/macros/s/AKfycbytFkWX4Hc0Cp-cy5L17wL6bdJm9j-NaD4w23g9r7xUfoHTCRxEB4ApXUo0ObR95e6E/exec" target="_blank" rel="noopener">
+                Buka langsung di tab baru
+            </a>
+        </div>
+    </div>
+    <iframe id="app-frame" src="https://script.google.com/macros/s/AKfycbytFkWX4Hc0Cp-cy5L17wL6bdJm9j-NaD4w23g9r7xUfoHTCRxEB4ApXUo0ObR95e6E/exec"></iframe>
 
-    <iframe src="https://script.google.com/macros/s/AKfycbytFkWX4Hc0Cp-cy5L17wL6bdJm9j-NaD4w23g9r7xUfoHTCRxEB4ApXUo0ObR95e6E/exec"></iframe>
+    <script>
+        const loadingScreen = document.getElementById('loading-screen');
+        const iframe = document.getElementById('app-frame');
 
+        iframe.addEventListener('load', function() {
+            loadingScreen.classList.add('hidden');
+        });
+
+        // Kalau lebih dari 8 detik belum selesai load, tampilkan link fallback.
+        // Catatan: karena iframe ini cross-origin (script.google.com), browser tidak
+        // mengizinkan kita memeriksa ISI halaman di dalamnya (misal apakah itu halaman
+        // "akses ditolak" dari Google) — event 'load' akan tetap terpicu selama request
+        // berhasil sampai ke server, terlepas dari isinya. Timeout ini hanya jaring
+        // pengaman untuk kasus koneksi lambat / server belum merespons sama sekali.
+        setTimeout(function() {
+            if (!loadingScreen.classList.contains('hidden')) {
+                loadingScreen.classList.add('timeout');
+            }
+        }, 8000);
+    </script>
 </body>
 </html>
